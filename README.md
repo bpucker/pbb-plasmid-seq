@@ -6,6 +6,7 @@ Plasmids are pooled at equimolar amounts based on NanoDrop measurements (estimat
 Expected sequences of all plasmids are collected in a multiple FASTA file. Headers in this file will be cleaned from illegal characters as part of the data analysis process.
 
 ## Installation
+
 ```
 sudo apt install minimap2 && \
 sudo apt install samtools && \
