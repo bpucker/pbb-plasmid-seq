@@ -1,6 +1,6 @@
 ### Boas Pucker ###
 ### pucker@uni-bonn.de ###
-__version__ = "v0.1"
+__version__ = "v0.1.1"
 
 __usage__ = """
 						PBB plasmid sequencing workflow (""" + __version__ +""")
@@ -109,10 +109,25 @@ def main( arguments ):
 	else:
 		flye = "flye"
 	
-	seqkit = "seqkit"
-	seqtk = "seqtk"
-	miniasm = "miniasm"
-	racon = "racon"
+	if '--seqkit' in arguments:
+		seqkit = arguments[ arguments.index('--seqkit')+1 ]
+	else:
+		seqkit = "seqkit"
+	
+	if '--seqtk' in arguments:
+		seqtk = arguments[ arguments.index('--seqtk')+1 ]
+	else:
+		seqtk = "seqtk"
+	
+	if '--miniasm' in arguments:
+		miniasm = arguments[ arguments.index('--miniasm')+1 ]
+	else:
+		miniasm = "miniasm"
+	
+	if '--racon' in arguments:
+		racon = arguments[ arguments.index('--racon')+1 ]
+	else:
+		racon = "racon"
 	
 	if '--threads' in arguments:
 		threads = arguments[ arguments.index('--threads')+1 ]
