@@ -328,6 +328,7 @@ def main( arguments ):
 				p.communicate()
 				
 				log( "Miniasm assembly process and correction done" )
+	log( "Process complete. You can share results now." )
 
 
 if '--reads' in sys.argv and '--ref' in sys.argv and '--out' in sys.argv and '--tmp' in sys.argv:
