@@ -1,6 +1,6 @@
 ### Boas Pucker ###
 ### pucker@uni-bonn.de ###
-__version__ = "v0.1.2.2"
+__version__ = "v0.1.2.3"
 
 __usage__ = """
 						PBB plasmid sequencing workflow (""" + __version__ +""")
@@ -223,8 +223,7 @@ def main( arguments ):
 		if not os.path.isfile( bam_per_ref ):
 			p = subprocess.Popen( args= " ".join( [ 	samtools, "view -b", sorted_bam_file, seq, ">", bam_per_ref, "2>>", doc_file5 ] ), shell=True )
 			p.communicate()
-			sys.stdout.write( "BAM done\n" )
-			sys.stdout.flush()
+			log( "BAM done" )
 		
 			# index file
 			p = subprocess.Popen( args= " ".join( [ 	samtools, "index", bam_per_ref, "2>>", doc_file5 ] ), shell=True )
@@ -301,8 +300,7 @@ def main( arguments ):
 				gfa_file = miniasm_result_folder + "assembly.gfa"
 				p = subprocess.Popen( args= " ".join( [ 	miniasm, "-f", subset_fastq_file, paf_file, ">", gfa_file, "2>>", doc_file5 ] ), shell=True )
 				p.communicate()
-				sys.stdout.write( "Initial miniasm assembly done\n" )
-				sys.stdout.flush()
+				log( "Initial miniasm assembly done" )
 				
 				assembly_file = miniasm_result_folder + "assembly.fasta"
 				gfa_to_fasta( gfa_file, assembly_file )
