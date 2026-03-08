@@ -1,6 +1,6 @@
 ### Boas Pucker ###
 ### pucker@uni-bonn.de ###
-__version__ = "v0.1.1"
+__version__ = "v0.1.2.1"
 
 __usage__ = """
 						PBB plasmid sequencing workflow (""" + __version__ +""")
@@ -129,6 +129,11 @@ def main( arguments ):
 	else:
 		racon = "racon"
 	
+	if '--bcftools' in arguments:
+		bcftools = arguments[ arguments.index('--bcftools')+1 ]
+	else:
+		bcftools = "bcftools"
+	
 	if '--threads' in arguments:
 		threads = arguments[ arguments.index('--threads')+1 ]
 	else:
@@ -204,8 +209,9 @@ def main( arguments ):
 	sys.stdout.flush()
 	
 	# --- split BAM by reference sequence into multiple BAMs (one per plasmid) --- #
-	doc_file5 =  tmp_folder + "bam_file_splitting_errors.txt"
+	
 	for idx, seq in enumerate( list( ref_seqs.keys() ) ):
+		doc_file5 =  tmp_folder + seq + ".errors.txt"
 		
 		sys.stdout.write( "Starting to process individual plasmids: " + seq + "\t(" + str( idx+1 ) +"/"+ str( len( list( ref_seqs.keys() ) ) ) + ")\n" )
 		sys.stdout.flush()
@@ -222,6 +228,7 @@ def main( arguments ):
 			p = subprocess.Popen( args= " ".join( [ 	samtools, "index", bam_per_ref, "2>>", doc_file5 ] ), shell=True )
 			p.communicate()
 		
+		
 		#generate FASTA file
 		fasta_file = output_folder + seq + ".fasta"
 		with open( fasta_file, "w" ) as out:
@@ -230,6 +237,7 @@ def main( arguments ):
 		p.communicate()
 		sys.stdout.write( "FASTA done\n" )
 		sys.stdout.flush()
+		
 		
 		#extract mapped reads into FASTQ file
 		fastq_file = tmp_folder + seq + ".fastq.gz"
@@ -254,6 +262,18 @@ def main( arguments ):
 		sys.stdout.write( "Ratio:" + str( ratio_to_keep ) + "\n" )
 		sys.stdout.flush()
 		
+		#conduct variant calling
+		vcf_file = output_folder + seq + ".vcf"
+		p = subprocess.Popen( args= " ".join( [ bcftools, "mpileup -f", fasta_file, "-Q 10 -q 10", bam_per_ref, "|", bcftools, "call -mv -o", vcf_file, "2>>", doc_file5 ] ), shell=True )
+		p.communicate()
+		#p = subprocess.Popen( args= " ".join( [ bcftools, "index", vcf_file, "2>>", doc_file5 ] ), shell=True )
+		#p.communicate()
+		coverage_cutoff = min( [ int( 0.2*current_coverage ), 10 ] )	#minimal coverage is 20% of average coverage, but at least 10
+		filtered_vcf_file = output_folder + seq + ".clean.vcf"
+		p = subprocess.Popen( args= " ".join( [ bcftools, "filter -i 'QUAL>20 && DP>" + str( coverage_cutoff ) + "'", vcf_file, "-o", filtered_vcf_file, "2>>", doc_file5 ] ), shell=True )
+		p.communicate()
+		sys.stdout.write( "Variant calling done\n" )
+		sys.stdout.flush()
 		
 		#randomly reduce number of reads
 		subset_fastq_file = output_folder + seq + ".subset.fastq.gz"
