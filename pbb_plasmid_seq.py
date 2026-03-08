@@ -1,6 +1,6 @@
 ### Boas Pucker ###
 ### pucker@uni-bonn.de ###
-__version__ = "v0.1.2.1"
+__version__ = "v0.1.2.2"
 
 __usage__ = """
 						PBB plasmid sequencing workflow (""" + __version__ +""")
@@ -19,6 +19,7 @@ __usage__ = """
 					"""
 
 import os, sys, subprocess, gzip
+from datetime import datetime
 
 # --- end of imports --- #
 
@@ -84,6 +85,14 @@ def gfa_to_fasta( gfa_file, assembly_file ):
 				name = parts[1]
 				seq = parts[2]
 				fasta.write(f">{name}\n{seq}\n")
+
+
+def log( message ):
+	"""! @brief generate a log entry for the given message """
+	
+	ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+	sys.stdout.write( "[" + ts + "] " + message + "\n" )
+	sys.stdout.flush()
 
 
 def main( arguments ):
@@ -156,16 +165,14 @@ def main( arguments ):
 	if not os.path.exists( tmp_folder ):
 		os.makedirs( tmp_folder )
 	
-	sys.stdout.write( "PBB plasmid sequencing: "+ __version__ + "\n" )
-	sys.stdout.write( "reads: "+ reads_file + "\n" )
-	sys.stdout.write( "reference: "+ reference_file + "\n" )
-	sys.stdout.flush()
+	log( "PBB plasmid sequencing: "+ __version__ )
+	log( "reads: "+ reads_file )
+	log( "reference: "+ reference_file )
 	
 	# --- clean input FASTA file --- #
 	clean_fasta_file = tmp_folder + "clean_reference_sequences.fasta"
 	ref_seqs = clean_input_fasta_file( reference_file, clean_fasta_file )
-	sys.stdout.write( "reference cleaning done\n" )
-	sys.stdout.flush()
+	log( "reference cleaning done" )
 	
 	# --- run minimap --- #
 	sam_file = tmp_folder + "mapping.sam"
@@ -180,8 +187,7 @@ def main( arguments ):
 																		"2>", doc_file+".err" 
 																		] ), shell=True )
 		p.communicate()
-	sys.stdout.write( "read mapping done\n" )
-	sys.stdout.flush()
+	log( "read mapping done" )
 	
 	# --- convert SAM to BAM --- #
 	bam_file = tmp_folder + "mapping.bam"
@@ -189,8 +195,7 @@ def main( arguments ):
 	if not os.path.isfile( bam_file ):	#skip if BAM already exists
 		p = subprocess.Popen( args= " ".join( [ 	samtools, "view -bS", sam_file, ">", bam_file, "2>", doc_file2 ] ), shell=True )
 		p.communicate()
-	sys.stdout.write( "SAM to BAM conversion done\n" )
-	sys.stdout.flush()
+	log( "SAM to BAM conversion done" )
 	
 	# --- sort BAM --- #
 	sorted_bam_file = tmp_folder + "mapping.sorted.bam"
@@ -198,23 +203,20 @@ def main( arguments ):
 	if not os.path.isfile( sorted_bam_file ):	#skip if sorted BAM already exists
 		p = subprocess.Popen( args= " ".join( [ 	samtools, "sort", bam_file, "-o", sorted_bam_file, "2>", doc_file3 ] ), shell=True )
 		p.communicate()
-	sys.stdout.write( "BAM sorting done\n" )
-	sys.stdout.flush()
+	log( "BAM sorting done" )
 	
 	# --- index BAM --- #
 	doc_file4 =  tmp_folder + "samtools.indexing_errors.txt"
 	p = subprocess.Popen( args= " ".join( [ 	samtools, "index", sorted_bam_file, "2>", doc_file4 ] ), shell=True )
 	p.communicate()
-	sys.stdout.write( "BAM indexing done\n" )
-	sys.stdout.flush()
+	log( "BAM indexing done" )
 	
 	# --- split BAM by reference sequence into multiple BAMs (one per plasmid) --- #
 	
 	for idx, seq in enumerate( list( ref_seqs.keys() ) ):
 		doc_file5 =  tmp_folder + seq + ".errors.txt"
 		
-		sys.stdout.write( "Starting to process individual plasmids: " + seq + "\t(" + str( idx+1 ) +"/"+ str( len( list( ref_seqs.keys() ) ) ) + ")\n" )
-		sys.stdout.flush()
+		log( "Starting to process individual plasmids: " + seq + "\t(" + str( idx+1 ) +"/"+ str( len( list( ref_seqs.keys() ) ) ) + ")" )
 		
 		# generate BAM file
 		bam_per_ref = output_folder + seq + ".bam"
@@ -235,8 +237,7 @@ def main( arguments ):
 			out.write( '>' + seq + "\n" + ref_seqs[ seq ] + "\n" )
 		p = subprocess.Popen( args= " ".join( [ 	samtools, "faidx", fasta_file, "2>>", doc_file5 ] ), shell=True )
 		p.communicate()
-		sys.stdout.write( "FASTA done\n" )
-		sys.stdout.flush()
+		log( "FASTA done" )
 		
 		
 		#extract mapped reads into FASTQ file
@@ -244,8 +245,7 @@ def main( arguments ):
 		p = subprocess.Popen( args= " ".join( [ samtools, "fastq -F 2308", bam_per_ref, "|", seqkit, "rmdup -n | gzip >", fastq_file, "2>>", doc_file5 ] ), shell=True )
 		#-F 2308: unmapped (4); secondary (256); supplementary (2048)
 		p.communicate()
-		sys.stdout.write( "FASTQ done\n" )
-		sys.stdout.flush()
+		log( "FASTQ done" )
 		
 		#calculate coverage and calculate read reduction factor
 		genome_size = len( ref_seqs[ seq ] )
@@ -256,11 +256,10 @@ def main( arguments ):
 		current_coverage = total_bases / genome_size
 		ratio_to_keep = target_coverage / float( current_coverage )
 		
-		sys.stdout.write( "Genome size:" + str( genome_size ) + "\n" )
-		sys.stdout.write( "Total bases:" + str( total_bases ) + "\n" )
-		sys.stdout.write( "Current coverage:" + str( current_coverage ) + "\n" )
-		sys.stdout.write( "Ratio:" + str( ratio_to_keep ) + "\n" )
-		sys.stdout.flush()
+		log( "Genome size:" + str( genome_size ) )
+		log( "Total bases:" + str( total_bases ) )
+		log( "Current coverage:" + str( current_coverage ) )
+		log( "Ratio:" + str( ratio_to_keep ) )
 		
 		#conduct variant calling
 		vcf_file = output_folder + seq + ".vcf"
@@ -272,16 +271,14 @@ def main( arguments ):
 		filtered_vcf_file = output_folder + seq + ".clean.vcf"
 		p = subprocess.Popen( args= " ".join( [ bcftools, "filter -i 'QUAL>20 && DP>" + str( coverage_cutoff ) + "'", vcf_file, "-o", filtered_vcf_file, "2>>", doc_file5 ] ), shell=True )
 		p.communicate()
-		sys.stdout.write( "Variant calling done\n" )
-		sys.stdout.flush()
+		log( "Variant calling done" )
 		
 		#randomly reduce number of reads
 		subset_fastq_file = output_folder + seq + ".subset.fastq.gz"
 		p = subprocess.Popen( args= " ".join( [ 	seqtk, "sample -s42", fastq_file, str( ratio_to_keep ), "| gzip >", subset_fastq_file, "2>>", doc_file5 ] ), shell=True )
 		#randomly take X% of reads
 		p.communicate()
-		sys.stdout.write( "FASTQ filtering done\n" )
-		sys.stdout.flush()		
+		log( "FASTQ filtering done" )	
 		
 		#assemble plasmid sequence with flye
 		if assembly_status:	#would allow to switch this off
@@ -299,8 +296,7 @@ def main( arguments ):
 																				"2>>", doc_file5 
 																			] ), shell=True )
 				p.communicate()
-				sys.stdout.write( "Minimap for miniasm done\n" )
-				sys.stdout.flush()
+				log( "Minimap for miniasm done" )
 				
 				gfa_file = miniasm_result_folder + "assembly.gfa"
 				p = subprocess.Popen( args= " ".join( [ 	miniasm, "-f", subset_fastq_file, paf_file, ">", gfa_file, "2>>", doc_file5 ] ), shell=True )
@@ -310,8 +306,7 @@ def main( arguments ):
 				
 				assembly_file = miniasm_result_folder + "assembly.fasta"
 				gfa_to_fasta( gfa_file, assembly_file )
-				sys.stdout.write( "Contig extraction done\n" )
-				sys.stdout.flush()			
+				log( "Contig extraction done" )		
 				
 				assembly_paf_file = miniasm_result_folder + "assembly.paf"
 				p = subprocess.Popen( args= " ".join( [ 	minimap,
@@ -323,21 +318,18 @@ def main( arguments ):
 																				"2>>", doc_file5
 																			] ), shell=True )
 				p.communicate()
-				sys.stdout.write( "Mapping to assembly done\n" )
-				sys.stdout.flush()
+				log( "Mapping to assembly done" )
 				
 				polished_assembly_file = miniasm_result_folder + "polished_assembly.fasta"
 				p = subprocess.Popen( args= " ".join( [ racon, subset_fastq_file, assembly_paf_file, assembly_file, ">", polished_assembly_file, "2>>", doc_file5 ] ), shell=True )
 				p.communicate()
-				sys.stdout.write( "Assembly polishing done\n" )
-				sys.stdout.flush()
+				log( "Assembly polishing done" )
 				
 				#copy assembly from that output folder				
 				p = subprocess.Popen( args= " ".join( [ "cp", polished_assembly_file, output_folder + seq + ".assembly.fasta", "2>>", doc_file5 ] ), shell=True )
 				p.communicate()
 				
-				sys.stdout.write( "Miniasm assembly process and correction done\n" )
-				sys.stdout.flush()
+				log( "Miniasm assembly process and correction done" )
 
 
 if '--reads' in sys.argv and '--ref' in sys.argv and '--out' in sys.argv and '--tmp' in sys.argv:
