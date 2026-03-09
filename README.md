@@ -1,9 +1,9 @@
 # pbb-plasmid-seq
+## Background
 This repository describes the ONT-based plasmid sequencing workflow conducted by the [Plant Biotechnology and Bioinformatics](https://www.pbb.uni-bonn.de) group at Uni Bonn.
 
-Plasmids are pooled at equimolar amounts based on NanoDrop measurements (estimations). The library prepration is done with the rapid library prep kit from ONT. Sequencing is conducted on R10 flow cells on a PromethION after completion of plant genome sequencing projects. The remaining pores offer sufficient capacity for the sequencing of dozens of plasmids. Basecalling is performed with dorado.
+Plasmids are pooled at equimolar amounts based on NanoDrop measurements (estimations). The library prepration is done with the rapid library prep kit from ONT. Sequencing is conducted on R10 flow cells on a PromethION after completion of plant genome sequencing projects. The remaining pores offer sufficient capacity for the sequencing of dozens of plasmids. Basecalling is performed with dorado. Expected sequences of all plasmids are collected in a multiple FASTA file. Headers in this file will be cleaned from illegal characters as part of the data analysis process. A read mapping with minimap2 against all expected sequences is conducted. The resulting mapping is split per plasmid reference using samtools. Reads per plasmid are extracted with samtools and converted into FASTQ. Due to very high coverage, a subsampling is possible to reduce the amount of reads subjected to the following assembly step. Miniasm is used for a de novo assembly per plasmid. Racon is applied to polish the assembled plasmid sequence. All result files are made accessible to submitting persons via cloud transfer.
 
-Expected sequences of all plasmids are collected in a multiple FASTA file. Headers in this file will be cleaned from illegal characters as part of the data analysis process.
 
 ## Installation
 
