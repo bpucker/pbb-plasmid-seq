@@ -16,6 +16,20 @@ sudo apt install miniasm && \
 sudo apt install racon
 ```
 
+## Cleaning and merging FASTA files
+```
+python3 clean_plasmid_seq_input.py \
+--in ./folder_with_plasmid_FASTAs/ \
+--fasta clean_plasmid_sequences.fasta \
+--doc documentation.txt
+```
+
+`--in` specifies the input folder containing FASTA files. File extensions fa, fas, fasta, FA, FAS, and FASTA are considered.
+
+`--fasta` specifies the output FASTA file with clean sequences.
+
+`--doc` specifies the documentation file. Mapping of original sequence names to cleaned sequence names is stored here.
+
 
 ## Running data analysis
 
