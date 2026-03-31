@@ -1,4 +1,4 @@
-# pbb-plasmid-seq
+# NanoPlasmiQC
 ## Background
 This repository describes the ONT-based plasmid sequencing workflow conducted by the [Plant Biotechnology and Bioinformatics](https://www.pbb.uni-bonn.de) group at Uni Bonn.
 
