@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/1175571640.svg)](https://doi.org/10.5281/zenodo.19359036)
+
 # NanoPlasmiQC
 ## Background
 This repository describes the ONT-based plasmid sequencing workflow conducted by the [Plant Biotechnology and Bioinformatics](https://www.pbb.uni-bonn.de) group at Uni Bonn.
