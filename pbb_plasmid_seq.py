@@ -1,6 +1,6 @@
 ### Boas Pucker ###
 ### pucker@uni-bonn.de ###
-__version__ = "v0.1.2.3"
+__version__ = "v0.1.2.4"
 
 __usage__ = """
 						PBB plasmid sequencing workflow (""" + __version__ +""")
@@ -273,11 +273,16 @@ def main( arguments ):
 		log( "Variant calling done" )
 		
 		#randomly reduce number of reads
-		subset_fastq_file = output_folder + seq + ".subset.fastq.gz"
-		p = subprocess.Popen( args= " ".join( [ 	seqtk, "sample -s42", fastq_file, str( ratio_to_keep ), "| gzip >", subset_fastq_file, "2>>", doc_file5 ] ), shell=True )
-		#randomly take X% of reads
-		p.communicate()
-		log( "FASTQ filtering done" )	
+		if ratio_to_keep < 1:
+			subset_fastq_file = output_folder + seq + ".subset.fastq.gz"
+			p = subprocess.Popen( args= " ".join( [ 	seqtk, "sample -s42", fastq_file, str( ratio_to_keep ), "| gzip >", subset_fastq_file, "2>>", doc_file5 ] ), shell=True )
+			#randomly take X% of reads
+			p.communicate()
+			log( "FASTQ filtering done" )
+		else:
+			p = subprocess.Popen( args= " ".join( [ 	"cat", fastq_file, "| gzip >", subset_fastq_file, "2>>", doc_file5 ] ), shell=True )
+			p.communicate()
+			log( "No subsampling needed" )
 		
 		#assemble plasmid sequence with flye
 		if assembly_status:	#would allow to switch this off
